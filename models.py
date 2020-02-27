@@ -40,6 +40,8 @@ def create_modules(module_defs, img_size, arc):
                 # modules.add_module('activation', nn.PReLU(num_parameters=1, init=0.10))
             elif mdef['activation'] == 'swish':
                 modules.add_module('activation', Swish())
+            elif mdef['activation'] == 'l-relu':
+                modules.add_module('activation', LReLU())
 
         elif mdef['type'] == 'maxpool':
             size = mdef['size']
@@ -174,6 +176,33 @@ class Swish(nn.Module):
 class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
     def forward(self, x):
         return x.mul_(F.softplus(x).tanh())
+
+
+class LReLUFunc(torch.autograd.Function):
+
+    @staticmethod
+    def forward(ctx, input, negative_slope=1e-2):
+        ctx.save_for_backward(input)
+        ctx.save_for_backward(negative_slope)
+        input[input < 0] *= negative_slope
+        return input
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, negative_slope = ctx.saved_tensors
+        grad_input = grad_output.clone()
+        grad_input[input < 0] = negative_slope
+        return grad_input
+
+
+class LReLU(nn.Module):
+
+    def __init__(self, negative_slope=1e-2):
+        super().__init__()
+        self.negative_slope = negative_slope
+
+    def forward(self, x):
+        return LReLUFunc.apply(x, negative_slope=self.negative_slope)
 
 
 class YOLOLayer(nn.Module):
