@@ -178,39 +178,34 @@ class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
         return x.mul_(F.softplus(x).tanh())
 
 
+_negative_slope, _m = 1e-2, 1e5
+
+
 class LReLUFunc(torch.autograd.Function):
 
     @staticmethod
-    def forward(ctx, input, negative_slope, m):
+    def forward(ctx, input):
         ctx.save_for_backward(input)
-        ctx.save_for_backward(negative_slope)
-        ctx.save_for_backward(m)
-
         neg = input[input < 0]
-        s = neg - torch.floor(m * neg) / m
-        input[input < 0] = negative_slope * s
+        s = neg - torch.floor(_m * neg) / _m
+        input[input < 0] = _negative_slope * s
         return input
 
     @staticmethod
     def backward(ctx, grad_output):
-        input, negative_slope, m = ctx.saved_tensors
+        input, = ctx.saved_tensors
         grad_input = grad_output.clone()
-        grad_input[input < 0] = negative_slope
+        grad_input[input < 0] = _negative_slope
         pos = input[input >= 0]
-        s = pos - torch.floor(m * pos) / m
+        s = pos - torch.floor(_m * pos) / _m
         grad_input[input >= 0] += s
         return grad_input
 
 
 class LReLU(nn.Module):
 
-    def __init__(self, negative_slope=1e-2, m=1e5):
-        super().__init__()
-        self.negative_slope = negative_slope
-        self.m = m
-
     def forward(self, x):
-        return LReLUFunc.apply(x, self.negative_slope, self.m)
+        return LReLUFunc.apply(x)
 
 
 class YOLOLayer(nn.Module):
