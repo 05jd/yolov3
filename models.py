@@ -1,8 +1,10 @@
 import torch.nn.functional as F
 
+import activations
 from utils.google_utils import *
 from utils.parse_config import *
 from utils.utils import *
+
 
 ONNX_EXPORT = False
 
@@ -207,6 +209,8 @@ class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
 #
 #     def forward(self, x):
 #         return LReLUFunc.apply(x)
+
+LReLU = activations.LReLU
 
 
 class YOLOLayer(nn.Module):
