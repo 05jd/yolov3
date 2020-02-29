@@ -186,9 +186,10 @@ class LReLUFunc(torch.autograd.Function):
     @staticmethod
     def forward(ctx, input):
         ctx.save_for_backward(input)
-        neg = input[input < 0]
-        s = neg - torch.floor(_m * neg) / _m
-        input[input < 0] = _negative_slope * s
+        # neg = input[input < 0]
+        # s = neg - torch.floor(_m * neg) / _m
+        # input[input < 0] = _negative_slope * s
+        input[input < 0] *= _negative_slope
         return input
 
     @staticmethod
@@ -196,9 +197,9 @@ class LReLUFunc(torch.autograd.Function):
         input, = ctx.saved_tensors
         grad_input = grad_output.clone()
         grad_input[input < 0] = _negative_slope
-        pos = input[input >= 0]
-        s = pos - torch.floor(_m * pos) / _m
-        grad_input[input >= 0] += s
+        # pos = input[input >= 0]
+        # s = pos - torch.floor(_m * pos) / _m
+        # grad_input[input >= 0] += s
         return grad_input
 
 
