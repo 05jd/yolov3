@@ -178,35 +178,35 @@ class Mish(nn.Module):  # https://github.com/digantamisra98/Mish
         return x.mul_(F.softplus(x).tanh())
 
 
-_negative_slope, _m = 1e-2, 1e5
-
-
-class LReLUFunc(torch.autograd.Function):
-
-    @staticmethod
-    def forward(ctx, input):
-        ctx.save_for_backward(input)
-        # neg = input[input < 0]
-        # s = neg - torch.floor(_m * neg) / _m
-        # input[input < 0] = _negative_slope * s
-        input[input < 0] *= _negative_slope
-        return input
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        input, = ctx.saved_tensors
-        grad_input = grad_output.clone()
-        grad_input[input < 0] = _negative_slope
-        # pos = input[input >= 0]
-        # s = pos - torch.floor(_m * pos) / _m
-        # grad_input[input >= 0] += s
-        return grad_input
-
-
-class LReLU(nn.Module):
-
-    def forward(self, x):
-        return LReLUFunc.apply(x)
+# _negative_slope, _m = 1e-2, 1e5
+#
+#
+# class LReLUFunc(torch.autograd.Function):
+#
+#     @staticmethod
+#     def forward(ctx, input):
+#         ctx.save_for_backward(input)
+#         # neg = input[input < 0]
+#         # s = neg - torch.floor(_m * neg) / _m
+#         # input[input < 0] = _negative_slope * s
+#         input[input < 0] *= _negative_slope
+#         return input
+#
+#     @staticmethod
+#     def backward(ctx, grad_output):
+#         input, = ctx.saved_tensors
+#         grad_input = grad_output.clone()
+#         grad_input[input < 0] = _negative_slope
+#         # pos = input[input >= 0]
+#         # s = pos - torch.floor(_m * pos) / _m
+#         # grad_input[input >= 0] += s
+#         return grad_input
+#
+#
+# class LReLU(nn.Module):
+#
+#     def forward(self, x):
+#         return LReLUFunc.apply(x)
 
 
 class YOLOLayer(nn.Module):
